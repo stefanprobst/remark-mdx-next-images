@@ -1,0 +1,97 @@
+{
+  "name": "@stefanprobst/remark-mdx-next-images",
+  "version": "1.0.0",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    "import": "./src/index.js"
+  },
+  "scripts": {
+    "format": "prettier . --cache --check --ignore-path .gitignore",
+    "format:fix": "npm run format -- --write",
+    "lint": "eslint . --cache --ignore-path .gitignore",
+    "lint:fix": "npm run lint -- --fix",
+    "prepare": "simple-git-hooks || exit 0",
+    "prepublishOnly": "npm run validate",
+    "test": "uvu test -i fixtures",
+    "typecheck": "tsc --noEmit -p ./tsconfig.json",
+    "validate": "npm run format && npm run lint && npm run typecheck && npm run test"
+  },
+  "engines": {
+    "node": ">=14.17"
+  },
+  "dependencies": {
+    "@stefanprobst/is-absolute-url": "^1.0.2",
+    "unist-util-visit": "^4.1.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.0.2",
+    "@mdx-js/mdx": "^2.1.1",
+    "@stefanprobst/commitlint-config": "^1.0.2",
+    "@stefanprobst/prettier-config": "^2.0.2",
+    "@types/mdast": "^3.0.10",
+    "@types/node": "^18.0.0",
+    "@types/react": "^18.0.14",
+    "@types/sharp": "^0.30.4",
+    "eslint": "^8.17.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "lint-staged": "^13.0.1",
+    "prettier": "^2.7.1",
+    "sharp": "^0.30.6",
+    "simple-git-hooks": "^2.8.0",
+    "to-vfile": "^7.2.3",
+    "typescript": "^4.7.3",
+    "unified": "^10.1.2",
+    "uvu": "^0.5.3"
+  },
+  "peerDependencies": {
+    "sharp": ">=0.30",
+    "unified": ">=10"
+  },
+  "commitlint": {
+    "extends": "@stefanprobst/commitlint-config"
+  },
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended",
+      "plugin:node/recommended",
+      "prettier"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2019,
+      "sourceType": "module"
+    },
+    "env": {
+      "es6": true,
+      "node": true
+    },
+    "plugins": [
+      "import",
+      "simple-import-sort"
+    ],
+    "rules": {
+      "import/first": "error",
+      "import/newline-after-import": "error",
+      "import/no-duplicates": "error",
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error"
+    }
+  },
+  "lint-staged": {
+    "*.@(js|ts)": [
+      "eslint --cache --fix",
+      "prettier --cache --write"
+    ],
+    "*.@(json|md)": "prettier --cache --write"
+  },
+  "prettier": "@stefanprobst/prettier-config",
+  "simple-git-hooks": {
+    "commit-msg": "npx commitlint --edit",
+    "pre-commit": "npx lint-staged",
+    "pre-push": "npm run validate"
+  }
+}
