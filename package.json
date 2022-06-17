@@ -1,12 +1,15 @@
 {
   "name": "@stefanprobst/remark-mdx-next-images",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
     "import": "./src/index.js"
   },
+  "files": [
+    "src"
+  ],
   "scripts": {
     "format": "prettier . --cache --check --ignore-path .gitignore",
     "format:fix": "npm run format -- --write",
@@ -79,7 +82,8 @@
       "import/no-duplicates": "error",
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error"
-    }
+    },
+    "ignorePatterns": "*.d.ts"
   },
   "lint-staged": {
     "*.@(js|ts)": [
