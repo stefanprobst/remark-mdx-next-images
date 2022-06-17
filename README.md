@@ -36,7 +36,7 @@ content (`value`) (see [`vfile`](https://github.com/vfile/vfile)). For further d
 render MDX with Next.js, please see [the offical guide](https://mdxjs.com/guides/mdx-on-demand/).
 
 ```js
-// ./pages.js
+// ./pages/index.js
 
 import { compile, run } from '@mdx-js/mdx'
 import withNextImages from '@stefanprobst/remark-mdx-next-images'
