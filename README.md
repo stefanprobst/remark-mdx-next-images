@@ -18,7 +18,7 @@ Will _not_ be transformed: ![remote example image](https://example.com/image.png
 are converted to
 
 ```jsx
-<Image src={{ src: "/_next/static/media/image.12345678.png", width: 200, height: 200 }} alt="local example image" title="local example" />
+<Image src={{ src: "/image.12345678.png", width: 200, height: 200 }} alt="local example image" title="local example" />
 
 <img src="https://example.com/image.png" alt="remote example image" title="remote example" />
 ```
@@ -115,7 +115,15 @@ function CustomImage(props) {
 }
 ```
 
+Images will be copied to a the Next.js `public` folder. In most cases you will want to specify a
+specific subfolder with the `publicDirectory` option, so it can safely by added to `.gitignore`.
+
+Cache headers for images served from that directory can be set via
+[Next.js config](https://nextjs.org/docs/api-reference/next.config.js/headers).
+
 ## Options
 
+- `publicDirectory` (optional): output folder path relative to the Next.js `public` folder, defaults
+  to `/`
 - `assetPrefix` (optional): same as
   [Next.js `assetPrefix`](https://nextjs.org/docs/api-reference/next.config.js/cdn-support-with-asset-prefix)

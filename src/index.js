@@ -1,6 +1,7 @@
 /**
  * @typedef {object} Options
  * @property {string} [assetPrefix]
+ * @property {string} [publicDirectory]
  */
 
 import { isAbsoluteUrl } from '@stefanprobst/is-absolute-url'
@@ -14,7 +15,7 @@ import { visit } from 'unist-util-visit'
 
 /** @type {import('unified').Plugin<[Options], import('mdast').Root>} */
 const withNextImages = function withNextImages(options) {
-  const { assetPrefix = '' } = options || {}
+  const { assetPrefix = '', publicDirectory = '/' } = options || {}
 
   return async function transformer(tree, vfile) {
     assert(vfile.path != null, 'Please provide a path to the input MDX file.')
@@ -39,22 +40,15 @@ const withNextImages = function withNextImages(options) {
         const hash = crypto.createHash('md4')
         hash.update(buffer)
 
-        /**
-         * @see https://github.com/vercel/next.js/blob/a4abc1e77dd05ae2ac172858e4b9fb82af5294f3/packages/next/build/webpack/loaders/next-image-loader.js#L14-L18
-         *
-         * @see https://github.com/vercel/next.js/blob/a4abc1e77dd05ae2ac172858e4b9fb82af5294f3/packages/next/server/image-optimizer.ts#L157-L159
-         * @see https://github.com/vercel/next.js/blob/a4abc1e77dd05ae2ac172858e4b9fb82af5294f3/packages/next/server/image-optimizer.ts#L575-L580
-         */
         const outputFilePath = path.join(
-          'static',
-          'media',
+          publicDirectory,
           path.basename(srcFilePath).slice(0, -extension.length + 1) +
             hash.digest('hex').slice(0, 8) +
             extension,
         )
 
-        const publicPath = path.join(assetPrefix, '/_next', outputFilePath)
-        const destinationFilePath = path.join(process.cwd(), '.next', outputFilePath)
+        const publicPath = path.join(assetPrefix, outputFilePath)
+        const destinationFilePath = path.join(process.cwd(), 'public', outputFilePath)
 
         if (!(await fileExists(destinationFilePath))) {
           await fs.mkdir(path.dirname(destinationFilePath), { recursive: true })
@@ -68,19 +62,10 @@ const withNextImages = function withNextImages(options) {
         parent.children.splice(
           index,
           1,
-          // @ts-expect-error TODO: figure out typings
+          // @ts-expect-error TODO: figure out typings, use import('mdast-util-mdx')
           createMdxJsxTextElement({
             name: 'Image',
             attributes: [
-              // createMdxJsxAttribute({ name: 'src', value: publicPath }),
-              // createMdxJsxAttribute({
-              //   name: 'width',
-              //   value: createMdxJsxAttributeValueExpression(createLiteral(width)),
-              // }),
-              // createMdxJsxAttribute({
-              //   name: 'height',
-              //   value: createMdxJsxAttributeValueExpression(createLiteral(height)),
-              // }),
               createMdxJsxAttribute({
                 name: 'src',
                 value: createMdxJsxAttributeValueExpression(
