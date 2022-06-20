@@ -16,7 +16,7 @@ test('does not transform urls', async () => {
   const expected = await fs.readFile('./test/fixtures/expected.jsx', { encoding: 'utf-8' })
   assert.fixture(String(result), expected)
 
-  assert.ok(fs.stat('./.next/static/media/image.0a4b47fd.png'))
+  assert.ok(await fs.stat('./.next/static/media/image.0a4b47fd.png'))
 })
 
 test.run()
