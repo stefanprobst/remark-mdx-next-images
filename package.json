@@ -11,7 +11,7 @@
     "src"
   ],
   "scripts": {
-    "format": "prettier . --cache --check --ignore-path .gitignore",
+    "format": "prettier . --cache --check --ignore-path .prettierignore",
     "format:fix": "npm run format -- --write",
     "lint": "eslint . --cache --ignore-path .gitignore",
     "lint:fix": "npm run lint -- --fix",
