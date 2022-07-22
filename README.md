@@ -121,8 +121,42 @@ specific subfolder with the `publicDirectory` option, so it can safely by added 
 Cache headers for images served from that directory can be set via
 [Next.js config](https://nextjs.org/docs/api-reference/next.config.js/headers).
 
-## Options
+## Frontmatter images
 
+With the `images` option it is possible to process additional image file paths which have been added
+to `vfile.data`. This is useful to e.g. process a `featuredImage` frontmatter field:
+
+```js
+import { read } from 'to-vfile'
+import { matter } from 'vfile-matter'
+
+const vfile = read('./post.md')
+/** There are different approaches to parsing frontmatter. `vfile-matter` makes parsed frontmatter accessible on `vfile.data.matter`. */
+matter(vfile)
+const result = await compile(vfile, {
+  outputFormat: 'function-body',
+  remarkPlugins: [
+    [
+      withNextImages,
+      {
+        images(data) {
+          return [{ key: 'featuredImage', filePath: data.matter.featuredImage }]
+        },
+      },
+    ],
+  ],
+})
+
+expect(result.data.images).toEqual({
+  featuredImage: { src: '/image.0a4b47fd.png', width: 200, heigh: 200, blurDataURL: '...' },
+})
+```
+
+The resulting data shape matches Next.js `StaticImageData`.
+
+## Other options
+
+- `images` (optional): provide additional image file paths
 - `publicDirectory` (optional): output folder path relative to the Next.js `public` folder, defaults
   to `/`
 - `assetPrefix` (optional): same as

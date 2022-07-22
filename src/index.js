@@ -2,6 +2,7 @@
  * @typedef {object} Options
  * @property {string} [assetPrefix]
  * @property {string} [publicDirectory]
+ * @property {(data: import('vfile').Data) => Array<{ key: string; filePath: string }>} [images]
  */
 
 import { isAbsoluteUrl } from '@stefanprobst/is-absolute-url'
@@ -13,17 +14,57 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { visit } from 'unist-util-visit'
 
-/** @type {import('unified').Plugin<[Options], import('mdast').Root>} */
+/** @type {import('unified').Plugin<[Options?], import('mdast').Root>} */
 const withNextImages = function withNextImages(options) {
-  const { assetPrefix = '', publicDirectory = '/' } = options || {}
+  const { assetPrefix = '', publicDirectory = '/', images } = options || {}
 
   return async function transformer(tree, vfile) {
     assert(vfile.path != null, 'Please provide a path to the input MDX file.')
     const _filePath = isAbsoluteUrl(vfile.path) ? fileURLToPath(vfile.path) : vfile.path
     const _directory = path.dirname(_filePath)
     const directory = path.isAbsolute(_directory) ? _directory : path.join(vfile.cwd, _directory)
+    const additionalFilePaths = images != null ? images(vfile.data) : []
+    assert(vfile.data.images == null, 'VFile data already has a `image` field.')
+    vfile.data.images = {}
+
+    async function generate(url) {
+      const src = path.normalize(url)
+      const srcFilePath = path.isAbsolute(src) ? src : path.join(directory, src)
+      const extension = path.extname(srcFilePath).toLowerCase()
+
+      const buffer = await fs.readFile(srcFilePath)
+      const hash = crypto.createHash('md4')
+      hash.update(buffer)
+
+      const outputFilePath = path.join(
+        publicDirectory,
+        path.basename(srcFilePath).slice(0, -extension.length + 1) +
+          hash.digest('hex').slice(0, 8) +
+          extension,
+      )
+
+      const publicPath = path.join(assetPrefix, outputFilePath)
+      const destinationFilePath = path.join(process.cwd(), 'public', outputFilePath)
+
+      if (!(await fileExists(destinationFilePath))) {
+        await fs.mkdir(path.dirname(destinationFilePath), { recursive: true })
+        await fs.copyFile(srcFilePath, destinationFilePath)
+      }
+
+      const image = sharp(buffer)
+      const { width, height, format } = await image.metadata()
+      const blurDataUrl = format !== 'svg' ? await generateBlurDataUrl(image) : undefined
+
+      return { src: publicPath, width, height, blurDataURL: blurDataUrl }
+    }
 
     const promises = []
+
+    for (const { key, filePath } of additionalFilePaths) {
+      if (filePath != null && !isAbsoluteUrl(filePath)) {
+        vfile.data.images[key] = await generate(filePath)
+      }
+    }
 
     visit(tree, 'image', (node, index, parent) => {
       assert(index != null)
@@ -31,33 +72,8 @@ const withNextImages = function withNextImages(options) {
 
       if (isAbsoluteUrl(node.url)) return
 
-      async function generate() {
-        const src = path.normalize(node.url)
-        const srcFilePath = path.isAbsolute(src) ? src : path.join(directory, src)
-        const extension = path.extname(srcFilePath).toLowerCase()
-
-        const buffer = await fs.readFile(srcFilePath)
-        const hash = crypto.createHash('md4')
-        hash.update(buffer)
-
-        const outputFilePath = path.join(
-          publicDirectory,
-          path.basename(srcFilePath).slice(0, -extension.length + 1) +
-            hash.digest('hex').slice(0, 8) +
-            extension,
-        )
-
-        const publicPath = path.join(assetPrefix, outputFilePath)
-        const destinationFilePath = path.join(process.cwd(), 'public', outputFilePath)
-
-        if (!(await fileExists(destinationFilePath))) {
-          await fs.mkdir(path.dirname(destinationFilePath), { recursive: true })
-          await fs.copyFile(srcFilePath, destinationFilePath)
-        }
-
-        const image = sharp(buffer)
-        const { width, height, format } = await image.metadata()
-        const blurDataUrl = format !== 'svg' ? await generateBlurDataUrl(image) : undefined
+      async function replaceNode() {
+        const { src, width, height, blurDataURL } = await generate(node.url)
 
         parent.children.splice(
           index,
@@ -70,7 +86,7 @@ const withNextImages = function withNextImages(options) {
                 name: 'src',
                 value: createMdxJsxAttributeValueExpression(
                   createObjectExpression([
-                    createProperty(createIdentifier('src'), createLiteral(publicPath)),
+                    createProperty(createIdentifier('src'), createLiteral(src)),
                     createProperty(createIdentifier('width'), createLiteral(width)),
                     createProperty(createIdentifier('height'), createLiteral(height)),
                   ]),
@@ -78,13 +94,13 @@ const withNextImages = function withNextImages(options) {
               }),
               createMdxJsxAttribute({ name: 'alt', value: node.alt }),
               createMdxJsxAttribute({ name: 'title', value: node.title }),
-              createMdxJsxAttribute({ name: 'blurDataURL', value: blurDataUrl }),
+              createMdxJsxAttribute({ name: 'blurDataURL', value: blurDataURL }),
             ].filter(Boolean),
           }),
         )
       }
 
-      promises.push(generate())
+      promises.push(replaceNode())
     })
 
     await Promise.all(promises)

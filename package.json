@@ -1,6 +1,6 @@
 {
   "name": "@stefanprobst/remark-mdx-next-images",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.js",
@@ -49,7 +49,8 @@
     "to-vfile": "^7.2.3",
     "typescript": "^4.7.3",
     "unified": "^10.1.2",
-    "uvu": "^0.5.3"
+    "uvu": "^0.5.3",
+    "vfile-matter": "^4.0.0"
   },
   "peerDependencies": {
     "sharp": ">=0.30",
