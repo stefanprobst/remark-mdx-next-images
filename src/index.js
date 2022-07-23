@@ -1,8 +1,9 @@
 /**
  * @typedef {object} Options
  * @property {string} [assetPrefix]
- * @property {string} [publicDirectory]
  * @property {(data: import('vfile').Data) => Array<{ key: string; filePath: string }>} [images]
+ * @property {string} [name='Image']
+ * @property {string} [publicDirectory]
  */
 
 import { isAbsoluteUrl } from '@stefanprobst/is-absolute-url'
@@ -16,7 +17,7 @@ import { visit } from 'unist-util-visit'
 
 /** @type {import('unified').Plugin<[Options?], import('mdast').Root>} */
 const withNextImages = function withNextImages(options) {
-  const { assetPrefix = '', publicDirectory = '/', images } = options || {}
+  const { assetPrefix = '', images, name = 'Image', publicDirectory = '/' } = options || {}
 
   return async function transformer(tree, vfile) {
     assert(vfile.path != null, 'Please provide a path to the input MDX file.')
@@ -80,7 +81,7 @@ const withNextImages = function withNextImages(options) {
           1,
           // @ts-expect-error TODO: figure out typings, use import('mdast-util-mdx')
           createMdxJsxTextElement({
-            name: 'Image',
+            name,
             attributes: [
               createMdxJsxAttribute({
                 name: 'src',

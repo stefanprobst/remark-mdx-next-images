@@ -159,5 +159,6 @@ The resulting data shape matches Next.js `StaticImageData`.
 - `images` (optional): provide additional image file paths
 - `publicDirectory` (optional): output folder path relative to the Next.js `public` folder, defaults
   to `/`
+- `name` (optional): component name, defaults to `Image`
 - `assetPrefix` (optional): same as
   [Next.js `assetPrefix`](https://nextjs.org/docs/api-reference/next.config.js/cdn-support-with-asset-prefix)
